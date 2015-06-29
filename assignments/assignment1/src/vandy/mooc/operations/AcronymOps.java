@@ -4,7 +4,6 @@ import java.lang.ref.WeakReference;
 import java.util.List;
 
 import retrofit.RestAdapter;
-import retrofit.RestAdapter.LogLevel;
 import vandy.mooc.activities.AcronymActivity;
 import vandy.mooc.provider.cache.ContentProviderTimeoutCache;
 import vandy.mooc.retrofit.AcronymData;
@@ -17,182 +16,158 @@ import android.app.Activity;
 import android.util.Log;
 
 /**
- * This class implements all the acronym-related operations defined in
- * the AcronymOps interface.
+ * This class implements all the acronym-related operations defined in the AcronymOps interface.
  */
-public class AcronymOps
-       implements ConfigurableOps,
-                  GenericAsyncTaskOps<String, Void, List<AcronymExpansion>> {
-    /**
-     * Debugging tag used by the Android logger.
-     */
-    private final String TAG = getClass().getSimpleName();
-   
-    /**
-     * Used to enable garbage collection.
-     */
-    private WeakReference<AcronymActivity> mActivity;
+public class AcronymOps implements ConfigurableOps, GenericAsyncTaskOps<String, Void, List<AcronymExpansion>> {
+	/**
+	 * Debugging tag used by the Android logger.
+	 */
+	private final String TAG = getClass().getSimpleName();
 
-    /**
-     * List of results to display (if any).
-     */
-    private List<AcronymExpansion> mResults;
+	/**
+	 * Used to enable garbage collection.
+	 */
+	private WeakReference<AcronymActivity> mActivity;
 
-    /**
-     * Timeout cache that uses Content Providers to cache data and
-     * uses AlarmManager and Service to remove expired cache entries.
-     * Default timeout is 10 seconds.
-     */
-    private ContentProviderTimeoutCache mAcronymCache;
+	/**
+	 * List of results to display (if any).
+	 */
+	private List<AcronymExpansion> mResults;
 
-    /**
-     * Retrofit proxy that sends requests to the Acronym web service
-     * and converts the Json response to an instance of AcronymData
-     * POJO class.
-     */
-    private AcronymWebServiceProxy mAcronymWebServiceProxy;
+	/**
+	 * Timeout cache that uses Content Providers to cache data and uses AlarmManager and Service to remove expired cache
+	 * entries. Default timeout is 10 seconds.
+	 */
+	private ContentProviderTimeoutCache mAcronymCache;
 
-    /**
-     * The GenericAsyncTask used to expand an acronym in a background
-     * thread via the Acronym web service.
-     */
-    private GenericAsyncTask<String, Void, List<AcronymExpansion>, AcronymOps> mAsyncTask;
+	/**
+	 * Retrofit proxy that sends requests to the Acronym web service and converts the Json response to an instance of
+	 * AcronymData POJO class.
+	 */
+	private AcronymWebServiceProxy mAcronymWebServiceProxy;
 
-    /**
-     * Default constructor that's needed by the GenericActivity
-     * framework.
-     */
-    public AcronymOps() {
-    }
+	/**
+	 * The GenericAsyncTask used to expand an acronym in a background thread via the Acronym web service.
+	 */
+	private GenericAsyncTask<String, Void, List<AcronymExpansion>, AcronymOps> mAsyncTask;
 
-    /**
-     * Called after a runtime configuration change occurs to finish
-     * the initialisation steps.
-     */
-    public void onConfiguration(Activity activity,
-                                boolean firstTimeIn) {
-        final String time = firstTimeIn ? "first time" : "second+ time";
-        Log.d(TAG,
-              "onConfiguration() called the "
-              + time
-              + " with activity = "
-              + activity);
+	/**
+	 * Default constructor that's needed by the GenericActivity framework.
+	 */
+	public AcronymOps() {
+	}
 
-        // (Re)set the mActivity WeakReference.
-        mActivity = new WeakReference<>((AcronymActivity) activity);
+	/**
+	 * Called after a runtime configuration change occurs to finish the initialisation steps.
+	 */
+	@Override
+	public void onConfiguration(Activity activity, boolean firstTimeIn) {
+		final String time = firstTimeIn ? "first time" : "second+ time";
+		Log.d(TAG, "onConfiguration() called the " + time + " with activity = " + activity);
 
-        if (firstTimeIn) {
-            // Initialize the TimeoutCache.
-            mAcronymCache = 
-                new ContentProviderTimeoutCache
-                (activity.getApplicationContext());
+		// (Re)set the mActivity WeakReference.
+		mActivity = new WeakReference<>((AcronymActivity) activity);
 
-            // Create a proxy to access the Acronym web service.  TODO
-            // -- you fill in here, replacing "null" with the
-            // appropriate initialization of the proxy.
-            mAcronymWebServiceProxy = null;
-        } else
-            // Update the results on the UI.
-            updateResultsDisplay();
-    }
+		if (firstTimeIn) {
+			// Initialize the TimeoutCache.
+			mAcronymCache = new ContentProviderTimeoutCache(activity.getApplicationContext());
 
-    /**
-     * Display results if any (due to runtime configuration change).
-     */
-    private void updateResultsDisplay() {
-        if (mResults != null)
-            mActivity.get().displayResults(mResults, 
-                                           null);
-    }
+			// Create a proxy to access the Acronym web service.  TODOne
+			// -- you fill in here, replacing "null" with the
+			// appropriate initialization of the proxy.
+			RestAdapter restAdapter = new RestAdapter.Builder().setEndpoint(AcronymWebServiceProxy.ENDPOINT).build();
+			mAcronymWebServiceProxy = restAdapter.create(AcronymWebServiceProxy.class);
+		} else {
+			// Update the results on the UI.
+			updateResultsDisplay();
+		}
+	}
 
-    /**
-     * Initiate the synchronous acronym lookup when the user presses the
-     * "Lookup Acronym" button.
-     */
-    public void expandAcronym(final String acronym) {
-        if (mAsyncTask != null)
-            // Cancel an ongoing operation to avoid having two
-            // requests run concurrently.
-            mAsyncTask.cancel(true);
+	/**
+	 * Display results if any (due to runtime configuration change).
+	 */
+	private void updateResultsDisplay() {
+		if (mResults != null) {
+			mActivity.get().displayResults(mResults, null);
+		}
+	}
 
-        // Execute the AsyncTask to expand the acronym without
-        // blocking the caller.
-        mAsyncTask = new GenericAsyncTask<>(this);
-        mAsyncTask.execute(acronym);
-    }
+	/**
+	 * Initiate the synchronous acronym lookup when the user presses the "Lookup Acronym" button.
+	 */
+	public void expandAcronym(final String acronym) {
+		if (mAsyncTask != null) {
+			// Cancel an ongoing operation to avoid having two
+			// requests run concurrently.
+			mAsyncTask.cancel(true);
+		}
 
-    /**
-     * Retrieve the expanded acronym results via a synchronous two-way
-     * method call, which runs in a background thread to avoid
-     * blocking the UI thread.
-     */
-    public List<AcronymExpansion> doInBackground(String acronym) {
-        try {
-            // Try to get the results from the cache.
-            List<AcronymExpansion> longForms =
-                mAcronymCache.get(acronym);
+		// Execute the AsyncTask to expand the acronym without
+		// blocking the caller.
+		mAsyncTask = new GenericAsyncTask<>(this);
+		mAsyncTask.execute(acronym);
+	}
 
-            // If data is in cache return it.
-            if (longForms != null
-                && !longForms.isEmpty()) {
-                Log.v(TAG,
-                      acronym
-                      + ": in cache");
+	/**
+	 * Retrieve the expanded acronym results via a synchronous two-way method call, which runs in a background thread to
+	 * avoid blocking the UI thread.
+	 */
+	@Override
+	public List<AcronymExpansion> doInBackground(String acronym) {
+		try {
+			// Try to get the results from the cache.
+			List<AcronymExpansion> longForms = mAcronymCache.get(acronym);
 
-                // Return the results from the cache.
-                return longForms;
-            }
+			// If data is in cache return it.
+			if (longForms != null && !longForms.isEmpty()) {
+				Log.v(TAG, acronym + ": in cache");
 
-            // If the location's data wasn't in the cache or was
-            // stale, use Retrofit to fetch it from the Acronym web
-            // service.
-            else {
-                Log.v(TAG,
-                      acronym
-                      + ": not in cache");
+				// Return the results from the cache.
+				return longForms;
+			}
 
-                // Get the results from Acronym Web service using a
-                // two-way Retrofit RPC call.
-                // TODO -- you fill in here, replacying "null" with a
-                // call to the appropriate method on the proxy.
-                AcronymData result = null;
-                        
-                // Get the "long forms" of the acronym expansion.
-                longForms = result.getLfs();
+			// If the location's data wasn't in the cache or was
+			// stale, use Retrofit to fetch it from the Acronym web
+			// service.
+			else {
+				Log.v(TAG, acronym + ": not in cache");
 
-                // Put the long forms into the cache using the "short
-                // form" of the acronym.
-                mAcronymCache.put(result.getSf(),
-                                  longForms);
+				// Get the results from Acronym Web service using a
+				// two-way Retrofit RPC call.
+				// TODOne -- you fill in here, replacying "null" with a
+				// call to the appropriate method on the proxy.
+				AcronymData result = mAcronymWebServiceProxy.getAcronymResults(acronym).get(0);
 
-                // Return the results that were just stored in the
-                // cache.
-                return longForms;
-            }
-        } catch (Exception e) {
-            Log.v(TAG,
-                  "doInBackground() "
-                  + e);
-            return null;
-        }
-    }
+				// Get the "long forms" of the acronym expansion.
+				longForms = result.getLfs();
 
-    /**
-     * Display the results in the UI Thread.
-     */
-    public void onPostExecute(List<AcronymExpansion> acronymExpansionsList,
-                              String acronym) {
-        // Store the acronym data in anticipation of runtime
-        // configuration changes.
-        mResults = acronymExpansionsList;
+				// Put the long forms into the cache using the "short
+				// form" of the acronym.
+				mAcronymCache.put(result.getSf(), longForms);
 
-        // Try to display the results.
-        mActivity.get().displayResults(acronymExpansionsList,
-                                       "no expansions for " 
-                                       + acronym 
-                                       + " found");
+				// Return the results that were just stored in the
+				// cache.
+				return longForms;
+			}
+		} catch (Exception e) {
+			Log.v(TAG, "doInBackground() " + e);
+			return null;
+		}
+	}
 
-        // Indicate the AsyncTask is done.
-        mAsyncTask = null;
-    }
+	/**
+	 * Display the results in the UI Thread.
+	 */
+	@Override
+	public void onPostExecute(List<AcronymExpansion> acronymExpansionsList, String acronym) {
+		// Store the acronym data in anticipation of runtime
+		// configuration changes.
+		mResults = acronymExpansionsList;
+
+		// Try to display the results.
+		mActivity.get().displayResults(acronymExpansionsList, "no expansions for " + acronym + " found");
+
+		// Indicate the AsyncTask is done.
+		mAsyncTask = null;
+	}
 }
