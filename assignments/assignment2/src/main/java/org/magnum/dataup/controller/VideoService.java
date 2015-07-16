@@ -1,7 +1,9 @@
 package org.magnum.dataup.controller;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -34,6 +36,31 @@ public class VideoService {
 	@RequestMapping(value = VideoSvcApi.VIDEO_SVC_PATH, method = RequestMethod.GET)
 	public @ResponseBody Collection<Video> getVideoList() {
 		return videos.values();
+	}
+
+	@RequestMapping(value = VideoSvcApi.VIDEO_RATE_PATH, method = RequestMethod.GET)
+	public @ResponseBody Video rateVideo(@PathVariable("id") Long id, @PathVariable("value") Integer rating, HttpServletResponse response) throws Exception {
+		Video video = videos.get(id);
+		if (video == null || rating == null) {
+			response.sendError(HttpServletResponse.SC_NOT_FOUND);
+			return null;
+		}
+
+		List<Integer> ratings = video.getRatings();
+		if (ratings == null) {
+			ratings = new ArrayList<>();
+			video.setRatings(ratings);
+		}
+		ratings.add(rating);
+
+		int sum = 0;
+		for (Integer i : ratings) {
+			sum += i;
+		}
+
+		video.setAvarageRating((float) sum / ratings.size());
+
+		return video;
 	}
 
 	@RequestMapping(value = VideoSvcApi.VIDEO_SVC_PATH, method = RequestMethod.POST)

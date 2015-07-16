@@ -112,6 +112,8 @@ public interface VideoSvcApi {
 	public static final String VIDEO_SVC_PATH = "/video";
 
 	public static final String VIDEO_DATA_PATH = VIDEO_SVC_PATH + "/{id}/data";
+	
+	public static final String VIDEO_RATE_PATH = VIDEO_SVC_PATH + "/{id}/rate/{value}";
 
 	/**
 	 * This endpoint in the API returns a list of the videos that have been added to the server. The Video objects

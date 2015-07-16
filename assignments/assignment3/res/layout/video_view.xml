@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/videoListItem"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="15dp" >
+
+    <TextView
+        android:id="@+id/videoTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_gravity="center"
+        android:ellipsize="end"
+        android:paddingBottom="20dp"
+        android:singleLine="true"
+        android:textColor="@android:color/black"
+        android:textSize="18sp" />
+
+    <Button
+        android:id="@+id/videoPlayButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/videoTitle"
+        android:layout_gravity="center"
+        android:text="@string/button_play" />
+
+    <Button
+        android:id="@+id/videoDownloadButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/videoTitle"
+        android:layout_gravity="center"
+        android:text="@string/button_download" />
+
+    <RatingBar
+        android:id="@+id/videoRatingBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/videoDownloadButton"
+        android:layout_centerHorizontal="true"
+        android:max="5"
+        android:paddingTop="20dp" />
+
+</RelativeLayout>

@@ -17,6 +17,7 @@
  */
 package org.magnum.dataup.model;
 
+import java.util.List;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -25,28 +26,14 @@ import com.fluentinterface.ReflectionBuilder;
 import com.fluentinterface.builder.Builder;
 
 /**
-                    ___                    ___           ___                            
-     _____         /\  \                  /\  \         /\  \                           
-    /::\  \       /::\  \                 \:\  \       /::\  \         ___              
-   /:/\:\  \     /:/\:\  \                 \:\  \     /:/\:\  \       /\__\             
-  /:/  \:\__\   /:/  \:\  \            _____\:\  \   /:/  \:\  \     /:/  /             
- /:/__/ \:|__| /:/__/ \:\__\          /::::::::\__\ /:/__/ \:\__\   /:/__/              
- \:\  \ /:/  / \:\  \ /:/  /          \:\~~\~~\/__/ \:\  \ /:/  /  /::\  \              
-  \:\  /:/  /   \:\  /:/  /            \:\  \        \:\  /:/  /  /:/\:\  \             
-   \:\/:/  /     \:\/:/  /              \:\  \        \:\/:/  /   \/__\:\  \            
-    \::/  /       \::/  /                \:\__\        \::/  /         \:\__\           
-     \/__/         \/__/                  \/__/         \/__/           \/__/           
-      ___           ___                                     ___                         
-     /\  \         /\  \         _____                     /\__\                        
-    |::\  \       /::\  \       /::\  \       ___         /:/ _/_         ___           
-    |:|:\  \     /:/\:\  \     /:/\:\  \     /\__\       /:/ /\__\       /|  |          
-  __|:|\:\  \   /:/  \:\  \   /:/  \:\__\   /:/__/      /:/ /:/  /      |:|  |          
- /::::|_\:\__\ /:/__/ \:\__\ /:/__/ \:|__| /::\  \     /:/_/:/  /       |:|  |          
- \:\~~\  \/__/ \:\  \ /:/  / \:\  \ /:/  / \/\:\  \__  \:\/:/  /      __|:|__|          
-  \:\  \        \:\  /:/  /   \:\  /:/  /   ~~\:\/\__\  \::/__/      /::::\  \          
-   \:\  \        \:\/:/  /     \:\/:/  /       \::/  /   \:\  \      ~~~~\:\  \         
-    \:\__\        \::/  /       \::/  /        /:/  /     \:\__\          \:\__\        
-     \/__/         \/__/         \/__/         \/__/       \/__/           \/__/        
+ * ___ ___ ___ _____ /\ \ /\ \ /\ \ /::\ \ /::\ \ \:\ \ /::\ \ ___ /:/\:\ \ /:/\:\ \ \:\ \ /:/\:\ \ /\__\ /:/ \:\__\ /:/
+ * \:\ \ _____\:\ \ /:/ \:\ \ /:/ / /:/__/ \:|__| /:/__/ \:\__\ /::::::::\__\ /:/__/ \:\__\ /:/__/ \:\ \ /:/ / \:\ \ /:/
+ * / \:\~~\~~\/__/ \:\ \ /:/ / /::\ \ \:\ /:/ / \:\ /:/ / \:\ \ \:\ /:/ / /:/\:\ \ \:\/:/ / \:\/:/ / \:\ \ \:\/:/ /
+ * \/__\:\ \ \::/ / \::/ / \:\__\ \::/ / \:\__\ \/__/ \/__/ \/__/ \/__/ \/__/ ___ ___ ___ /\ \ /\ \ _____ /\__\ |::\ \
+ * /::\ \ /::\ \ ___ /:/ _/_ ___ |:|:\ \ /:/\:\ \ /:/\:\ \ /\__\ /:/ /\__\ /| | __|:|\:\ \ /:/ \:\ \ /:/ \:\__\ /:/__/
+ * /:/ /:/ / |:| | /::::|_\:\__\ /:/__/ \:\__\ /:/__/ \:|__| /::\ \ /:/_/:/ / |:| | \:\~~\ \/__/ \:\ \ /:/ / \:\ \ /:/ /
+ * \/\:\ \__ \:\/:/ / __|:|__| \:\ \ \:\ /:/ / \:\ /:/ / ~~\:\/\__\ \::/__/ /::::\ \ \:\ \ \:\/:/ / \:\/:/ / \::/ / \:\
+ * \ ~~~~\:\ \ \:\__\ \::/ / \::/ / /:/ / \:\__\ \:\__\ \/__/ \/__/ \/__/ \/__/ \/__/ \/__/
  */
 
 public class Video {
@@ -57,8 +44,11 @@ public class Video {
 
 	public interface VideoBuilder extends Builder<Video> {
 		public VideoBuilder withTitle(String title);
+
 		public VideoBuilder withDuration(long duration);
+
 		public VideoBuilder withSubject(String subject);
+
 		public VideoBuilder withContentType(String contentType);
 	}
 
@@ -68,9 +58,27 @@ public class Video {
 	private String location;
 	private String subject;
 	private String contentType;
-
+	private float avarageRating;
+	@JsonIgnore
+	private List<Integer> ratings;
 	@JsonIgnore
 	private String dataUrl;
+
+	public Float getAvarageRating() {
+		return avarageRating;
+	}
+
+	public void setAvarageRating(Float avarageRating) {
+		this.avarageRating = avarageRating;
+	}
+
+	public List<Integer> getRatings() {
+		return ratings;
+	}
+
+	public void setRatings(List<Integer> ratings) {
+		this.ratings = ratings;
+	}
 
 	public long getId() {
 		return id;
@@ -137,9 +145,7 @@ public class Video {
 
 	@Override
 	public boolean equals(Object obj) {
-		return (obj instanceof Video)
-				&& Objects.equals(getTitle(), ((Video) obj).getTitle())
-				&& getDuration() == ((Video) obj).getDuration();
+		return obj instanceof Video && Objects.equals(getTitle(), ((Video) obj).getTitle()) && getDuration() == ((Video) obj).getDuration();
 	}
 
 }
